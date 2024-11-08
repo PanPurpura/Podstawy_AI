@@ -13,14 +13,14 @@ class Agent:
             scale_ = 1.0,
             tagged_ = False,
             velocity_ = engine.Vector2(0, 0),
-            heading_ = engine.Vector2(0, 0),
-            side_ = engine.Vector2(0, 0),
+            heading_ = engine.Vector2(1, 1),
+            side_ = engine.Vector2(1, 1),
             mass_ = 1.0,
-            maxSpeed_ = 0.15,
+            maxSpeed_ = 0.3,
             maxForce_ = 1.0,
             maxTurnRate_ = 0,
             world_ = None,
-            steeringBeh_ = SteeringBehaviours(True),
+            steeringBeh_ = SteeringBehaviours(False, True),
             ):
         self.id = id_
         self.position = position_
@@ -38,13 +38,11 @@ class Agent:
         self.steeringBeh = steeringBeh_
 
     def update(self, time_elapsed):
-        steeringForce = self.steeringBeh.calculate(engine.Vector2(200, 200), self)
-        #print(steeringForce)
+        steeringForce = self.steeringBeh.calculate(engine.Vector2(500, 480), self)
         acceleration = steeringForce / self.mass
         self.velocity += acceleration * time_elapsed
         self.velocity = VectorUtils.truncate_vec(self, self.velocity)
         self.position += self.velocity * time_elapsed
-        #print("Position: " + str(self.position))
 
         if self.velocity.length_squared() > 0.00000001:
             self.heading = self.velocity.normalize()
