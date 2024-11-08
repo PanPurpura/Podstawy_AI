@@ -1,15 +1,42 @@
 import pygame as engine
 from pygame.locals import *
+import random
+from VectorUtils import *
 
 class SteeringBehaviours:
 
-    def __init__(self, seek_ = False):
+    WANDER_RADIUS = 1.0
+    WANDER_DISTANCE = 1.0
+    WANDER_JITTER = 1.0
+
+    def __init__(self, seek_ = False, wander_ = False):
         self.seekOn = seek_
+        self.wanderOn = wander_
 
 
     def seek(self, targetPos, agent):
         desiredVelocity = (targetPos - agent.position).normalize() * agent.maxSpeed
         return desiredVelocity - agent.velocity
+    
+    def wander(self, agent):
+        wanderTarget = engine.Vector2(0, 0)
+
+        wanderTarget += engine.Vector2(random.uniform(-1, 1) * self.WANDER_JITTER,
+                                       random.uniform(-1, 1) * self.WANDER_JITTER)
+
+        wanderTarget.normalize()
+        wanderTarget *= self.WANDER_RADIUS
+
+        targetLocal = wanderTarget + engine.Vector2(self.WANDER_DISTANCE, 0)
+        targetWorld = VectorUtils.pointToWorldSpace(VectorUtils(),
+                                                    targetLocal,
+                                                    agent.heading,
+                                                    agent.side,
+                                                    agent.position)
+        
+        return targetWorld - agent.position
+
+
 
     def accumulateForce(self, runningTot, forceToAdd, agent):
         magnitudeSoFar = runningTot.length()
@@ -32,10 +59,16 @@ class SteeringBehaviours:
 
         force = None
 
-        if (self.seekOn == True):
-            force = self.seek(targetPos, agent) * 1.5
+        if self.seekOn == True:
+            force = self.seek(targetPos, agent) * 0.8
 
             if self.accumulateForce(steeringForce, force, agent) == False:
+                return steeringForce
+            
+        if self.wanderOn == True:
+            force = self.wander(agent) * 0.9
+
+            if self.accumulateForce(steeringForce, force, agent):
                 return steeringForce
             
         return steeringForce
